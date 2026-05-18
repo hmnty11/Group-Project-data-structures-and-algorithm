@@ -1,183 +1,128 @@
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
-// Class Mahasiswa
-class Mahasiswa {
-    String nama;
-    double ipk;
+// Kelas untuk merepresentasikan edge (sisi) dalam graph
+class Edge {
+    String destination;
+    int weight;
 
-    // Constructor
-    Mahasiswa(String nama, double ipk) {
-        this.nama = nama;
-        this.ipk = ipk;
+    public Edge(String destination, int weight) {
+        this.destination = destination;
+        this.weight = weight;
     }
 }
 
-public class Main {
+// Kelas Graph dengan adjacency list menggunakan HashMap (Hash Table)
+class Graph {
+    private Map<String, List<Edge>> adjacencyList;
 
-    public static void main(String[] args) {
+    public Graph() {
+        adjacencyList = new HashMap<>();
+    }
 
-        // HashMap untuk menyimpan data mahasiswa
-        HashMap<String, Mahasiswa> dataMahasiswa = new HashMap<>();
+    // Menambahkan edge berarah (directed) dari source ke destination dengan bobot
+    // tertentu
+    public void addEdge(String source, String destination, int weight) {
+        adjacencyList.computeIfAbsent(source, k -> new ArrayList<>()).add(new Edge(destination, weight));
+        // Untuk graph tidak berarah, tambahkan juga sebaliknya:
+        adjacencyList.computeIfAbsent(destination, k -> new ArrayList<>()).add(new Edge(source, weight));
+    }
 
-        Scanner input = new Scanner(System.in);
+    // Algoritma Dijkstra untuk mencari jalur terpendek dari start ke end
+    public void shortestPath(String start, String end) {
+        if (!adjacencyList.containsKey(start) || !adjacencyList.containsKey(end)) {
+            System.out.println("Titik awal atau tujuan tidak ditemukan dalam jaringan.");
+            return;
+        }
 
-        int pilihan;
+        // HashMap untuk menyimpan jarak terpendek dari start ke setiap node
+        Map<String, Integer> distances = new HashMap<>();
+        // HashMap untuk menyimpan node sebelumnya dalam jalur terpendek
+        Map<String, String> previous = new HashMap<>();
+        // PriorityQueue untuk memilih node dengan jarak terkecil
+        PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingInt(distances::get));
+        Set<String> visited = new HashSet<>();
 
-        do {
+        // Inisialisasi jarak semua node sebagai tak terhingga
+        for (String node : adjacencyList.keySet()) {
+            distances.put(node, Integer.MAX_VALUE);
+        }
+        distances.put(start, 0);
+        pq.add(start);
 
-            System.out.println("\n===== SISTEM MANAJEMEN DATA MAHASISWA =====");
-            System.out.println("1. Tambah Mahasiswa");
-            System.out.println("2. Cari Mahasiswa");
-            System.out.println("3. Edit Mahasiswa");
-            System.out.println("4. Hapus Mahasiswa");
-            System.out.println("5. Tampilkan Semua Data");
-            System.out.println("6. Jumlah Mahasiswa");
-            System.out.println("7. Keluar");
+        while (!pq.isEmpty()) {
+            String current = pq.poll();
+            if (visited.contains(current))
+                continue;
+            visited.add(current);
 
-            System.out.print("Pilih menu: ");
-            pilihan = input.nextInt();
-            input.nextLine();
+            // Jika sudah mencapai tujuan, bisa berhenti (opsional)
+            if (current.equals(end))
+                break;
 
-            switch (pilihan) {
-
-                // MENU TAMBAH MAHASISWA
-                case 1:
-
-                    System.out.print("Masukkan NIM  : ");
-                    String nim = input.nextLine();
-
-                    // Validasi NIM duplikat
-                    if (dataMahasiswa.containsKey(nim)) {
-                        System.out.println("NIM sudah terdaftar!");
-                        break;
-                    }
-
-                    System.out.print("Masukkan Nama : ");
-                    String nama = input.nextLine();
-
-                    System.out.print("Masukkan IPK  : ");
-                    double ipk = input.nextDouble();
-                    input.nextLine();
-
-                    // Simpan ke HashMap
-                    dataMahasiswa.put(nim, new Mahasiswa(nama, ipk));
-
-                    System.out.println("Data mahasiswa berhasil ditambahkan!");
-                    break;
-
-                // MENU CARI MAHASISWA
-                case 2:
-
-                    System.out.print("Masukkan NIM yang dicari: ");
-                    String cariNim = input.nextLine();
-
-                    if (dataMahasiswa.containsKey(cariNim)) {
-
-                        Mahasiswa mhs = dataMahasiswa.get(cariNim);
-
-                        System.out.println("\n===== DATA DITEMUKAN =====");
-                        System.out.println("NIM  : " + cariNim);
-                        System.out.println("Nama : " + mhs.nama);
-                        System.out.println("IPK  : " + mhs.ipk);
-
-                    } else {
-                        System.out.println("Data mahasiswa tidak ditemukan!");
-                    }
-
-                    break;
-
-                // MENU EDIT MAHASISWA
-                case 3:
-
-                    System.out.print("Masukkan NIM yang ingin diedit: ");
-                    String editNim = input.nextLine();
-
-                    if (dataMahasiswa.containsKey(editNim)) {
-
-                        System.out.print("Masukkan Nama Baru : ");
-                        String namaBaru = input.nextLine();
-
-                        System.out.print("Masukkan IPK Baru  : ");
-                        double ipkBaru = input.nextDouble();
-                        input.nextLine();
-
-                        // Update data
-                        dataMahasiswa.put(editNim,
-                                new Mahasiswa(namaBaru, ipkBaru));
-
-                        System.out.println("Data berhasil diperbarui!");
-
-                    } else {
-                        System.out.println("Data tidak ditemukan!");
-                    }
-
-                    break;
-
-                // MENU HAPUS MAHASISWA
-                case 4:
-
-                    System.out.print("Masukkan NIM yang ingin dihapus: ");
-                    String hapusNim = input.nextLine();
-
-                    if (dataMahasiswa.containsKey(hapusNim)) {
-
-                        dataMahasiswa.remove(hapusNim);
-
-                        System.out.println("Data berhasil dihapus!");
-
-                    } else {
-                        System.out.println("Data tidak ditemukan!");
-                    }
-
-                    break;
-
-                // MENU TAMPILKAN SEMUA DATA
-                case 5:
-
-                    if (dataMahasiswa.isEmpty()) {
-
-                        System.out.println("Belum ada data mahasiswa.");
-
-                    } else {
-
-                        System.out.println("\n===== DATA MAHASISWA =====");
-
-                        for (String key : dataMahasiswa.keySet()) {
-
-                            Mahasiswa data = dataMahasiswa.get(key);
-
-                            System.out.println("------------------------");
-                            System.out.println("NIM  : " + key);
-                            System.out.println("Nama : " + data.nama);
-                            System.out.println("IPK  : " + data.ipk);
-                        }
-                    }
-
-                    break;
-
-                // MENU JUMLAH MAHASISWA
-                case 6:
-
-                    System.out.println("Jumlah mahasiswa: "
-                            + dataMahasiswa.size());
-
-                    break;
-
-                // MENU KELUAR
-                case 7:
-
-                    System.out.println("Program selesai.");
-                    break;
-
-                // INPUT TIDAK VALID
-                default:
-
-                    System.out.println("Pilihan tidak valid!");
+            for (Edge edge : adjacencyList.getOrDefault(current, new ArrayList<>())) {
+                if (visited.contains(edge.destination))
+                    continue;
+                int newDist = distances.get(current) + edge.weight;
+                if (newDist < distances.get(edge.destination)) {
+                    distances.put(edge.destination, newDist);
+                    previous.put(edge.destination, current);
+                    pq.add(edge.destination);
+                }
             }
+        }
 
-        } while (pilihan != 7);
+        // Cetak hasil
+        if (distances.get(end) == Integer.MAX_VALUE) {
+            System.out.println("Tidak ada jalur dari " + start + " ke " + end);
+        } else {
+            // Rekonstruksi jalur
+            List<String> path = new ArrayList<>();
+            String step = end;
+            while (step != null) {
+                path.add(step);
+                step = previous.get(step);
+            }
+            Collections.reverse(path);
+            System.out.print("Jalur terpendek ditemukan: ");
+            for (int i = 0; i < path.size(); i++) {
+                System.out.print(path.get(i));
+                if (i < path.size() - 1)
+                    System.out.print(" => ");
+            }
+            System.out.println("\nJarak total: " + distances.get(end) + " km");
+        }
+    }
+}
 
-        input.close();
+// Program utama
+public class Main {
+    public static void main(String[] args) {
+        Graph graph = new Graph();
+        Scanner scanner = new Scanner(System.in);
+
+        // Membangun jaringan contoh (bisa disesuaikan)
+        // Kota-kota (simpul) dan jalan (edge) dengan bobot dalam km
+        graph.addEdge("A", "B", 5);
+        graph.addEdge("A", "C", 10);
+        graph.addEdge("B", "C", 3);
+        graph.addEdge("B", "D", 8);
+        graph.addEdge("C", "D", 2);
+        graph.addEdge("C", "E", 7);
+        graph.addEdge("D", "E", 4);
+        graph.addEdge("D", "F", 6);
+        graph.addEdge("E", "F", 3);
+        // Tambahkan node lain jika diinginkan
+
+        System.out.println("=== Aplikasi Simulasi Jaringan dengan Graph ===");
+        System.out.println("Daftar simpul (kota) yang tersedia:");
+        System.out.println("A, B, C, D, E, F"); // Sesuaikan dengan data di atas
+
+        System.out.print("Masukkan titik awal: ");
+        String start = scanner.nextLine().trim().toUpperCase();
+        System.out.print("Masukkan titik tujuan: ");
+        String end = scanner.nextLine().trim().toUpperCase();
+
+        graph.shortestPath(start, end);
+        scanner.close();
     }
 }
